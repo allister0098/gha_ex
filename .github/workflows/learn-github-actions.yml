@@ -34,6 +34,5 @@ jobs:
           docker save mysql:latest | gzip > /tmp/.docker-cache/mysql-latest.tar.gz
 
       - name: Display docker images.
-        if: steps.cache-docker-layers.outputs.cache-hit != 'true'
         run:
           docker image ls
