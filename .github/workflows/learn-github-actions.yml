@@ -1,13 +1,35 @@
-name: learn-github-actions
+name: Cache MySQL Docker Image
 run-name: ${{ github.actor }} is learning GitHub Actions
 on: [push]
 jobs:
-  check-bats-version:
+  cache-docker-image:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        id: cache-docker-layers
         with:
-          node-version: '20'
-      - run: npm install -g bats
-      - run: bats -v
+          path: /tmp/.docker-cache
+          key: ${{ runner.os }}-docker-mysql:latest
+          restore-keys: |
+            ${{ runner.os }}-docker-mysql
+
+      - name: Load Docker image from cache
+        if: steps.cache-docker-layers.outputs.cache-hit == 'true'
+        run: |
+          gzip -d /tmp/.docker-cache/mysql-latest.tar.gz
+          docker load < /tmp/.docker-cache/mysql-latest.tar.gz
+    
+      - name: Pull MySQL Docker image
+        if: steps.cache-docker-layers.outputs.cache-hit != 'true'
+        run: docker pull mysql:latest
+    
+      - name: Save Docker image to cache
+        if: steps.cache-docker-layers.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /tmp/.docker-cache
+          docker save mysql:latest | gzip > /tmp/.docker-cache/mysql-latest.tar.gz
