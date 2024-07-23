@@ -20,8 +20,7 @@ jobs:
 
       - name: Load Docker image from cache
         if: steps.cache-docker-layers.outputs.cache-hit == 'true'
-        run: |
-          gzip -d /tmp/.docker-cache/mysql-latest.tar.gz
+        run:
           docker load < /tmp/.docker-cache/mysql-latest.tar.gz
     
       - name: Pull MySQL Docker image
